@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analyse du document - CCF Bac Pro 2026</title>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --ink: #111;
+      --line: #1f1f1f;
+      --soft: #d8d8d8;
+      --panel: #ffffff;
+      --ui-bg: #eef2f5;
+      --accent: #1e293b;
+      --accent-2: #334155;
+      --section-fill: #d9d9d9;
+      --ok: #0f766e;
+      --complete-bg: #fff7bf;
+      --radius: 10px;
+    }
+
+    * { box-sizing: border-box; }
+    html { font-size: 16px; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--ui-bg);
+      color: var(--ink);
+      line-height: 1.35;
+    }
+
+    .app {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .screen-card {
+      background: var(--panel);
+      border-radius: 16px;
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.10);
+      overflow: hidden;
+      border: 1px solid #dde4ea;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: white;
+      padding: 18px 22px;
+    }
+
+    .toolbar h1 {
+      margin: 0;
+      font-size: 1.2rem;
+      letter-spacing: 0.02em;
+    }
+
+    .toolbar p {
+      margin: 4px 0 0;
+      opacity: 0.92;
+      font-size: 0.95rem;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-actions .btn-secondary,
+    .toolbar-actions .btn-primary {
+      min-width: 160px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.16);
+    }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 0.98rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: #fff;
+      color: var(--accent);
+    }
+
+    .btn-secondary {
+      background: #f8fafc;
+      color: var(--accent);
+      border: 1px solid #cbd5e1;
+    }
+
+    .editor {
+      padding: 22px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .section {
+      border: 1px solid #d9e0e6;
+      border-radius: 12px;
+      padding: 16px;
+      background: #fff;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .section.is-complete {
+      background: var(--complete-bg);
+      border-color: #e7cf67;
+    }
+
+    .section.is-complete .subcard {
+      background: rgba(255,255,255,0.55);
+    }
+
+    .section h2 {
+      margin: 0 0 14px;
+      font-size: 1rem;
+      text-transform: uppercase;
+      color: #0f172a;
+      letter-spacing: 0.04em;
+      padding: 10px 12px;
+      border-left: 5px solid #64748b;
+      border-radius: 10px;
+    }
+
+    .section[data-complete-group="identification-candidat"] h2 { background: #e0f2fe; border-left-color: #0284c7; }
+    .section[data-complete-group="besoin"] h2 { background: #dcfce7; border-left-color: #16a34a; }
+    .section[data-complete-group="support"] h2 { background: #fef3c7; border-left-color: #d97706; }
+    .section[data-complete-group="nature-genre"] h2 { background: #f3e8ff; border-left-color: #9333ea; }
+    .section[data-complete-group="production"] h2 { background: #fee2e2; border-left-color: #dc2626; }
+    .section[data-complete-group="complement"] h2 { background: #e0e7ff; border-left-color: #4f46e5; }
+    .section[data-complete-group="pertinence"] h2 { background: #fce7f3; border-left-color: #db2777; }
+
+    .grid-2, .grid-3, .grid-4 {
+      display: grid;
+      gap: 14px;
+    }
+
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+    label.field,
+    .field-block {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.96rem;
+      min-width: 0;
+    }
+
+    .field-label {
+      font-weight: 700;
+      color: #23313f;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid #bcc7d1;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font: inherit;
+      background: #fff;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 72px;
+    }
+
+    .check-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 8px 14px;
+    }
+
+    .check-grid.compact {
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+
+    .check-item,
+    .radio-line {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 0.95rem;
+    }
+
+    .radio-group-simple {
+      display: grid;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+
+
+    .help-box {
+      background: #fff7ed;
+      border: 1px dashed #f59e0b;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 0.92rem;
+    }
+
+    .hint {
+      font-size: 0.88rem;
+      color: #556371;
+      margin-top: 4px;
+    }
+
+    .subcard {
+      background: #f8fafc;
+      border: 1px solid #d9e2ec;
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .muted-line {
+      font-size: 0.92rem;
+      color: #566678;
+    }
+
+
+
+    .rich-editor-wrap {
+      border: 1px solid #bcc7d1;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .rich-toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 8px;
+      background: #f8fafc;
+      border-bottom: 1px solid #d9e2ec;
+    }
+
+    .rich-toolbar button {
+      padding: 8px 10px;
+      font-size: 0.9rem;
+      border-radius: 8px;
+      background: #fff;
+      color: #1e293b;
+      border: 1px solid #cbd5e1;
+      min-width: auto;
+      box-shadow: none;
+    }
+
+    .rich-editor {
+      min-height: 120px;
+      padding: 10px 12px;
+      outline: none;
+      white-space: pre-wrap;
+    }
+
+    .rich-editor:empty:before {
+      content: attr(data-placeholder);
+      color: #64748b;
+    }
+
+    .screen-only { display: block; }
+
+    .hidden-print-doc {
+      display: none;
+    }
+
+    @media (max-width: 860px) {
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      .app { padding: 14px; }
+      .editor { padding: 14px; }
+    }
+
+    @page {
+      size: A4;
+      margin: 10mm 9mm 11mm 9mm;
+    }
+
+    @media print {
+      html, body {
+        background: #fff;
+        font-size: 11pt;
+      }
+
+      .screen-card,
+      .toolbar,
+      .editor {
+        display: none !important;
+      }
+
+      .hidden-print-doc {
+        display: block;
+      }
+
+      .print-page {
+        color: #000;
+        break-inside: avoid;
+      }
+
+      .print-header {
+        text-align: center;
+        border: 1.6px solid #000;
+        padding: 8px 10px;
+        margin-bottom: 8px;
+      }
+
+      .print-header .line-1 {
+        font-weight: 700;
+        font-size: 11.5pt;
+      }
+
+      .print-header .line-2 {
+        font-weight: 800;
+        font-size: 14pt;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        margin-top: 3px;
+      }
+
+      .id-row {
+        display: grid;
+        grid-template-columns: 1.25fr 1.25fr 1fr .45fr;
+        border: 1.4px solid #000;
+        margin-bottom: 8px;
+      }
+
+      .id-cell {
+        min-height: 26px;
+        padding: 5px 7px;
+        border-right: 1.2px solid #000;
+      }
+
+      .id-cell:last-child { border-right: 0; }
+
+      .section-title {
+        background: var(--section-fill) !important;
+        color: #000 !important;
+        border: 1.4px solid #000;
+        font-weight: 800;
+        font-size: 11.1pt;
+        padding: 5px 7px;
+        margin-top: 8px;
+        margin-bottom: 0;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .section-box {
+        border: 1.4px solid #000;
+        border-top: 0;
+        padding: 7px 8px;
+        min-height: 28px;
+      }
+
+      .line-block {
+        margin-bottom: 5px;
+      }
+
+      .two-col-print {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .choice-line {
+        margin: 3px 0;
+      }
+
+      .checkbox-char {
+        font-weight: 700;
+        letter-spacing: 0.01em;
+      }
+
+      .genre-grid {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 6px;
+        table-layout: fixed;
+      }
+
+      .genre-grid td {
+        border: 1.2px solid #000;
+        text-align: center;
+        vertical-align: top;
+        padding: 6px 4px;
+        font-size: 9.2pt;
+      }
+
+      .genre-grid td.active {
+        background: #cfcfcf !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .genre-grid .title {
+        font-weight: 700;
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .biblio-frame {
+        border: 1.2px dashed #000;
+        padding: 7px;
+        margin-top: 6px;
+      }
+
+      .free-text {
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      #out-biblio p { margin: 0; }
+
+      .big-area {
+        min-height: 190px;
+      }
+
+      .footer-line {
+        margin-top: 12px;
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        font-size: 10pt;
+      }
+
+      .footer-fill {
+        flex: 1;
+        border-bottom: 1px solid #000;
+        min-height: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="screen-card">
+      <div class="toolbar">
+        <div>
+          <h1>Analyse du document — Lycée Agricole du Bourbonnais</h1>
+
+        </div>
+        <div class="toolbar-actions">
+          <input type="file" id="file-import-excel" accept=".xlsx,.xls" hidden>
+          <button class="btn-secondary" type="button" id="btn-save-excel">Enregistrer une fiche</button>
+          <button class="btn-secondary" type="button" id="btn-import-excel">Ouvrir une fiche</button>
+          <button class="btn-primary" type="button" id="btn-export">Exporter en PDF</button>
+          <button class="btn-secondary" type="button" id="btn-remplir-exemple">Charger un exemple</button>		  
+          <button class="btn-secondary" type="button" id="btn-reset">Effacer les données</button>		  
+        </div>
+      </div>
+
+      <form class="editor" id="analyse-form">
+        <section class="section" data-complete-group="identification-candidat">
+          <h2>Identification du candidat</h2>
+          <div class="grid-4">
+            <label class="field"><span class="field-label">Nom</span><input type="text" id="in-nom"></label>
+            <label class="field"><span class="field-label">Prénom</span><input type="text" id="in-prenom"></label>
+            <label class="field"><span class="field-label">Classe</span><input type="text" id="in-classe"></label>
+            <label class="field"><span class="field-label">N° du document</span><input type="text" id="in-docnum"></label>
+          </div>
+        </section>
+
+        <section class="section" data-complete-group="besoin">
+          <h2>Rappel du besoin d'information</h2>
+          <label class="field">
+            <span class="field-label">Rappel du besoin d'information</span>
+            <textarea id="in-besoin" rows="3" placeholder="Ex. En quoi le sport est bénéfique pour une personne en situation de handicap ?"></textarea>
+          </label>
+        </section>
+
+        <section class="section" data-complete-group="support">
+          <h2>Support du document : quoi ?</h2>
+          <div class="field-block">
+            <div class="field-label">Type de document</div>
+            <div class="check-grid compact" id="group-type">
+              <label class="check-item"><input type="checkbox" value="Livre">Livre</label>
+              <label class="check-item"><input type="checkbox" value="Périodique">Périodique</label>
+              <label class="check-item"><input type="checkbox" value="Page internet">Page internet</label>
+              <label class="check-item"><input type="checkbox" value="Affiche">Affiche</label>
+              <label class="check-item"><input type="checkbox" value="Publicité">Publicité</label>
+              <label class="check-item"><input type="checkbox" value="Dictionnaire">Dictionnaire</label>
+              <label class="check-item"><input type="checkbox" value="Encyclopédie">Encyclopédie</label>
+              <label class="check-item"><input type="checkbox" value="Carte">Carte</label>
+            </div>
+          </div>
+          <div class="grid-2" style="margin-top: 12px;">
+            <label class="field"><span class="field-label">Autre</span><input type="text" id="in-type-autre" placeholder="Précisez si nécessaire"></label>
+            <div class="field-block">
+              <div class="field-label">Support matériel de l'information</div>
+              <div class="check-grid compact">
+                <label class="radio-line"><input type="radio" name="mat" value="Papier">Papier</label>
+                <label class="radio-line"><input type="radio" name="mat" value="Numérique">Numérique</label>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" data-complete-group="nature-genre">
+          <h2>Nature et genre de l'information</h2>
+          <div class="grid-2">
+            <div class="subcard">
+              <div class="field-label">Nature de l'information</div>
+              <div class="check-grid compact" style="margin-top: 8px;">
+                <label class="check-item"><input type="checkbox" class="nat" value="Texte">Texte</label>
+                <label class="check-item"><input type="checkbox" class="nat" value="Audio">Audio</label>
+                <label class="check-item"><input type="checkbox" class="nat" value="Vidéo">Vidéo</label>
+                <label class="check-item"><input type="checkbox" class="nat" value="Iconographique">Iconographique</label>
+              </div>
+            </div>
+            <div class="subcard">
+              <label class="field">
+                <span class="field-label">Précision pour le support iconographique (facultatif)</span>
+                <input type="text" id="in-icono-precision" placeholder="photo, dessin, carte, schéma, graphique...">
+              </label>
+            </div>
+          </div>
+
+			<div class="subcard" style="margin-top: 14px;">
+			  <div class="field-label">Genre de l'information</div>
+
+			  <div class="check-grid compact" style="margin-top: 8px;">
+				<label class="radio-line">
+				  <input type="radio" name="genre" value="S">
+				  Information spécialisée (explicite + durable)
+				</label>
+
+				<label class="radio-line">
+				  <input type="radio" name="genre" value="R">
+				  Information de renseignement (explicite + éphémère)
+				</label>
+
+				<label class="radio-line">
+				  <input type="radio" name="genre" value="C">
+				  Information culturelle (diffuse + durable)
+				</label>
+
+				<label class="radio-line">
+				  <input type="radio" name="genre" value="M">
+				  Information médiatique (diffuse + éphémère)
+				</label>
+			  </div>
+			</div>
+        </section>
+
+        <section class="section" data-complete-group="production">
+          <h2>Production du document : comment ? pourquoi ? où ?</h2>
+          <div class="grid-3">
+            <div class="field-block">
+              <div class="field-label">Contexte de production / création</div>
+              <div class="check-grid">
+                <label class="check-item"><input type="checkbox" class="ctx" value="Scientifique et technique">Scientifique et technique</label>
+                <label class="check-item"><input type="checkbox" class="ctx" value="Professionnel">Professionnel</label>
+                <label class="check-item"><input type="checkbox" class="ctx" value="Institutionnel (Administration)">Institutionnel (Administration)</label>
+                <label class="check-item"><input type="checkbox" class="ctx" value="Individuel (Avis perso.)">Individuel (Avis perso.)</label>
+                <label class="check-item"><input type="checkbox" class="ctx" value="Commercial ou industriel (Entreprise)">Commercial ou industriel (Entreprise)</label>
+                <label class="check-item"><input type="checkbox" class="ctx" value="Associatif (Association, Syndicat)">Associatif (Association, Syndicat)</label>
+              </div>
+            </div>
+            <div class="field-block">
+              <div class="field-label">Intention de l'émetteur / de l'éditeur</div>
+              <div class="check-grid">
+                <label class="check-item"><input type="checkbox" class="intention" value="Informer ou diffuser le savoir">Informer ou diffuser le savoir</label>
+                <label class="check-item"><input type="checkbox" class="intention" value="Former">Former</label>
+                <label class="check-item"><input type="checkbox" class="intention" value="Débattre">Débattre</label>
+                <label class="check-item"><input type="checkbox" class="intention" value="Sensibiliser à une cause">Sensibiliser à une cause</label>
+                <label class="check-item"><input type="checkbox" class="intention" value="Vendre">Vendre</label>
+                <label class="check-item"><input type="checkbox" class="intention" value="Convaincre">Convaincre</label>
+              </div>
+            </div>
+            <label class="field">
+              <span class="field-label">Origine géographique (pays, ville, région)</span>
+              <input type="text" id="in-origine" placeholder="Ex. France">
+            </label>
+          </div>
+        </section>
+
+        <section class="section" data-complete-group="complement">
+          <h2>Afin de compléter l'analyse</h2>
+          <div class="grid-2">
+            <div class="subcard">
+              <h3 style="margin-top:0; font-size:1rem;">Identification du document</h3>
+              <div class="grid-2">
+                <label class="field"><span class="field-label">Titre du document</span><input type="text" id="in-titre-doc"></label>
+                <label class="field"><span class="field-label">Émetteur(s) / auteur(s)</span><input type="text" id="in-auteur"></label>
+                <label class="field"><span class="field-label">Éditeur(s)</span><input type="text" id="in-editeur"></label>
+                <label class="field"><span class="field-label">Date(s) de création / modification</span><input type="text" id="in-date-doc" placeholder="Ex. 06/09/2011"></label>
+              </div>
+            </div>
+            <div class="subcard">
+              <h3 style="margin-top:0; font-size:1rem;">Référence bibliographique</h3>
+              <div class="help-box">Outil : <a href="https://lycee-agricole-bourbonnais.fr/biblio" target="_blank" rel="noopener noreferrer"><strong>lycee-agricole-bourbonnais.fr/biblio</strong></a></div>
+              <div class="field" style="margin-top: 10px;">
+                <span class="field-label">Identification normée du document</span>
+                <div class="rich-editor-wrap">
+                  <div class="rich-toolbar screen-only">
+                    <button type="button" data-cmd="bold" data-target="in-biblio-rich"><strong>Gras</strong></button>
+                    <button type="button" data-cmd="underline" data-target="in-biblio-rich"><u>Souligné</u></button>
+                    <button type="button" data-cmd="italic" data-target="in-biblio-rich"><em>Italique</em></button>
+                    <button type="button" data-cmd="removeFormat" data-target="in-biblio-rich">Effacer format</button>
+                  </div>
+                  <div id="in-biblio-rich" class="rich-editor" contenteditable="true" data-placeholder="Saisissez la référence bibliographique avec gras, souligné ou italique si besoin."></div>
+                </div>
+                <input type="hidden" id="in-biblio">
+              </div>
+            </div>
+          </div>
+
+          <div class="grid-2" style="margin-top: 14px;">
+            <label class="field">
+              <span class="field-label">Validité de la source : compétence de l'auteur / des auteurs</span>
+              <textarea id="in-validite-auteur" rows="5" placeholder="Expliquez pourquoi l'auteur est compétent."></textarea>
+            </label>
+            <label class="field">
+              <span class="field-label">Validité de la source : que dire de l'éditeur ?</span>
+              <textarea id="in-validite-editeur" rows="5" placeholder="Précisez en quoi l'éditeur est fiable ou reconnu."></textarea>
+            </label>
+          </div>
+        </section>
+
+        <section class="section" data-complete-group="pertinence">
+          <h2>Que retiens-tu de pertinent pour répondre au besoin d'information ?</h2>
+          <label class="field">
+            <textarea id="in-pertinence" rows="12"></textarea>
+          </label>
+        </section>
+      </form>
+    </div>
+
+    <div class="hidden-print-doc" id="print-doc">
+      <div class="print-page">
+        <div class="print-header">
+          <div class="line-1">Lycée Agricole du Bourbonnais - Baccalauréat Professionnel 2025-2026</div>
+          <div class="line-2">Analyse du document</div>
+        </div>
+
+        <div class="id-row">
+          <div class="id-cell"><strong>NOM :</strong> <span id="out-nom"></span></div>
+          <div class="id-cell"><strong>Prénom :</strong> <span id="out-prenom"></span></div>
+          <div class="id-cell"><strong>Classe :</strong> <span id="out-classe"></span></div>
+          <div class="id-cell"><strong>N°</strong> <span id="out-docnum"></span></div>
+        </div>
+
+        <div class="section-title">Rappel du besoin d'information</div>
+        <div class="section-box free-text" id="out-besoin"></div>
+
+        <div class="section-title">Support du document : Quoi ?</div>
+        <div class="section-box">
+          <div class="line-block"><strong>Type de document ?</strong> <span id="out-type-line"></span></div>
+          <div class="line-block"><strong>Support matériel de l'information ?</strong> <span id="out-mat-line"></span></div>
+        </div>
+
+        <div class="section-title">Nature et Genre de l'information et support matériel : Quoi ?</div>
+        <div class="section-box">
+          <div class="line-block"><strong>Nature de l'information ?</strong> <span id="out-nature-line"></span></div>
+          <div class="line-block" id="out-icono-line-wrap" style="display:none;"><strong>Précision iconographique :</strong> <span id="out-icono-precision"></span></div>
+          <div class="line-block"><strong>Genre de l'information ?</strong></div>
+          <table class="genre-grid">
+            <tr>
+              <td id="td-S"><span class="title">L'information spécialisée</span>scientifique, technique<br><br>Utilité =<br>explicite + durable</td>
+              <td id="td-R"><span class="title">L'information de renseignement</span><br>Utilité =<br>explicite + éphémère</td>
+              <td id="td-C"><span class="title">L'information culturelle</span><br>Utilité =<br>diffuse + durable</td>
+              <td id="td-M"><span class="title">L'information médiatique</span><br>Utilité =<br>diffuse + éphémère</td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="section-title">Production du document : Comment ? Pourquoi ? Où ?</div>
+        <div class="section-box">
+          <div class="line-block"><strong>Contexte de production / création du document ?</strong> <span id="out-contexte"></span></div>
+          <div class="line-block"><strong>Intention de l'émetteur (auteur) ou de l'éditeur ?</strong> <span id="out-intention"></span></div>
+          <div class="line-block"><strong>Origine géographique ?</strong> <span id="out-origine"></span></div>
+        </div>
+
+        <div class="section-title">Afin de compléter l'analyse : Identification du document</div>
+        <div class="section-box">
+          <div class="line-block free-text">Concernant l'identification de la source de l'information, parmi les éléments d'identité je peux voir que le document :</div>
+          <div class="line-block">a pour titre <strong id="out-titre-doc"></strong></div>
+          <div class="line-block">a pour émetteur(s) / auteur(s) <strong id="out-auteur"></strong></div>
+          <div class="line-block">a pour éditeur(s) / diffuseur(s) <strong id="out-editeur"></strong></div>
+          <div class="line-block">a pour date(s) de création / modification <strong id="out-date-doc"></strong></div>
+          <div class="biblio-frame free-text"><strong>Identification normée du document : référence bibliographique</strong><br><div id="out-biblio"></div></div>
+        </div>
+
+        <div class="section-title">Validité de la source de l'information</div>
+        <div class="section-box two-col-print">
+          <div>
+            <strong>Je peux dire que l'auteur / les auteurs du document est / sont compétent(s) car :</strong>
+            <div class="free-text" id="out-validite-auteur"></div>
+          </div>
+          <div>
+            <strong>Que puis-je dire de l'éditeur ? (important si l'auteur n'est pas identifiable)</strong>
+            <div class="free-text" id="out-validite-editeur"></div>
+          </div>
+        </div>
+
+        <div class="section-title">Que retiens-tu de pertinent pour répondre au besoin d'information ?</div>
+        <div class="section-box free-text big-area" id="out-pertinence"></div>
+
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function val(id) {
+      const node = document.getElementById(id);
+      return node ? node.value.trim() : "";
+    }
+
+    function checkedValues(selector) {
+      return Array.from(document.querySelectorAll(selector + ':checked')).map(el => el.value);
+    }
+
+    function box(flag) {
+      return flag ? '☑' : '☐';
+    }
+
+    function makeOptionsLine(options, selectedValues, extraLabel, extraValue) {
+      const parts = options.map(option => `${box(selectedValues.includes(option))} ${option}`);
+      if (extraLabel) {
+        parts.push(`${box(Boolean(extraValue))} ${extraLabel}${extraValue ? ' = ' + extraValue : ' = _________________'}`);
+      }
+      return parts.join(' / ');
+    }
+
+    function setText(id, value) {
+      document.getElementById(id).textContent = value || '';
+    }
+
+    function htmlToPlainText(html) {
+      const temp = document.createElement('div');
+      temp.innerHTML = html || '';
+      return (temp.textContent || temp.innerText || '').replace(/\u00a0/g, ' ').trim();
+    }
+
+    function getGenreValue() {
+      return document.querySelector('input[name="genre"]:checked')?.value || '';
+    }
+
+    function setGenreValue(value) {
+      let matched = false;
+      document.querySelectorAll('input[name="genre"]').forEach(el => {
+        const shouldCheck = el.value === value;
+        el.checked = shouldCheck;
+        if (shouldCheck) matched = true;
+      });
+      if (!matched) {
+      }
+    }
+
+
+    function syncPrint() {
+      const typesList = ['Livre', 'Périodique', 'Page internet', 'Affiche', 'Publicité', 'Dictionnaire', 'Encyclopédie', 'Carte'];
+      const naturesList = ['Texte', 'Audio', 'Vidéo', 'Iconographique'];
+      const ctxList = [
+        'Scientifique et technique',
+        'Professionnel',
+        'Institutionnel (Administration)',
+        'Individuel (Avis perso.)',
+        'Commercial ou industriel (Entreprise)',
+        'Associatif (Association, Syndicat)'
+      ];
+      const intentionList = [
+        'Informer ou diffuser le savoir',
+        'Former',
+        'Débattre',
+        'Sensibiliser à une cause',
+        'Vendre',
+        'Convaincre'
+      ];
+
+      setText('out-nom', val('in-nom'));
+      setText('out-prenom', val('in-prenom'));
+      setText('out-classe', val('in-classe'));
+      setText('out-docnum', val('in-docnum'));
+      setText('out-besoin', val('in-besoin'));
+      setText('out-origine', val('in-origine'));
+      setText('out-titre-doc', val('in-titre-doc'));
+      setText('out-auteur', val('in-auteur'));
+      setText('out-editeur', val('in-editeur'));
+      setText('out-date-doc', val('in-date-doc'));
+      const biblioHtml = val('in-biblio') || '';
+      document.getElementById('out-biblio').innerHTML = biblioHtml;
+      
+      setText('out-validite-auteur', val('in-validite-auteur'));
+      setText('out-validite-editeur', val('in-validite-editeur'));
+      setText('out-pertinence', val('in-pertinence'));
+
+      const selectedTypes = checkedValues('#group-type input');
+      const typeLine = makeOptionsLine(typesList, selectedTypes, 'Autre', val('in-type-autre'));
+      setText('out-type-line', typeLine);
+
+      const selectedMat = document.querySelector('input[name="mat"]:checked')?.value || '';
+      setText('out-mat-line', `${box(selectedMat === 'Papier')} Papier / ${box(selectedMat === 'Numérique')} Numérique`);
+
+      const selectedNatures = checkedValues('.nat');
+      const natureLine = makeOptionsLine(naturesList, selectedNatures, '', '');
+      setText('out-nature-line', natureLine);
+
+      const iconoWrap = document.getElementById('out-icono-line-wrap');
+      const iconoPrecision = val('in-icono-precision');
+      const hasIcono = selectedNatures.includes('Iconographique') && iconoPrecision;
+      iconoWrap.style.display = hasIcono ? 'block' : 'none';
+      setText('out-icono-precision', iconoPrecision);
+
+      setText('out-contexte', makeOptionsLine(ctxList, checkedValues('.ctx'), '', ''));
+      setText('out-intention', makeOptionsLine(intentionList, checkedValues('.intention'), '', ''));
+
+      const genre = document.querySelector('input[name="genre"]:checked')?.value || '';
+      ['S', 'R', 'C', 'M'].forEach(code => {
+        document.getElementById('td-' + code).classList.toggle('active', code === genre);
+      });
+    }
+
+
+    const SECTION_COMPLETENESS = {
+      'identification-candidat': ['in-nom', 'in-prenom', 'in-classe', 'in-docnum'],
+      'besoin': ['in-besoin'],
+      'support': [
+        () => checkedValues('#group-type input').length > 0 || Boolean(val('in-type-autre')),
+        () => Boolean(document.querySelector('input[name="mat"]:checked'))
+      ],
+      'nature-genre': [
+        () => checkedValues('.nat').length > 0,
+        () => Boolean(document.querySelector('input[name="genre"]:checked')),
+        () => {
+          const selectedNatures = checkedValues('.nat');
+          return !selectedNatures.includes('Iconographique') || Boolean(val('in-icono-precision'));
+        }
+      ],
+      'production': [
+        () => checkedValues('.ctx').length > 0,
+        () => checkedValues('.intention').length > 0,
+        'in-origine'
+      ],
+      'complement': [
+        'in-titre-doc', 'in-auteur', 'in-editeur', 'in-date-doc', 'in-biblio', 'in-validite-auteur', 'in-validite-editeur'
+      ],
+      'pertinence': ['in-pertinence']
+    };
+
+    function isRequirementFilled(requirement) {
+      if (typeof requirement === 'function') return Boolean(requirement());
+      return Boolean(val(requirement));
+    }
+
+    function updateSectionCompletion() {
+      document.querySelectorAll('.section[data-complete-group]').forEach(section => {
+        const groupName = section.dataset.completeGroup;
+        const requirements = SECTION_COMPLETENESS[groupName] || [];
+        const isComplete = requirements.length > 0 && requirements.every(isRequirementFilled);
+        section.classList.toggle('is-complete', isComplete);
+      });
+    }
+
+    const FIELD_IDS = [
+      'in-nom', 'in-prenom', 'in-classe', 'in-docnum', 'in-besoin',
+      'in-type-autre', 'in-icono-precision', 'in-origine', 'in-titre-doc',
+      'in-auteur', 'in-editeur', 'in-date-doc', 'in-biblio',
+      'in-validite-auteur', 'in-validite-editeur', 'in-pertinence'
+    ];
+
+    const CHECKBOX_GROUPS = [
+      { selector: '#group-type input', key: 'types' },
+      { selector: '.nat', key: 'natures' },
+      { selector: '.ctx', key: 'contextes' },
+      { selector: '.intention', key: 'intentions' }
+    ];
+
+    function formatDateJJMMAA(date) {
+      const dd = String(date.getDate()).padStart(2, '0');
+      const mm = String(date.getMonth() + 1).padStart(2, '0');
+      const yy = String(date.getFullYear()).slice(-2);
+      return `${dd}${mm}${yy}`;
+    }
+
+    function sanitizeFilePart(value) {
+      return (value || '')
+        .normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .replace(/[\/:*?"<>|]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function buildDefaultFileName() {
+      const parts = [
+        sanitizeFilePart(val('in-nom')) || 'Nom',
+        sanitizeFilePart(val('in-prenom')) || 'Prenom',
+        sanitizeFilePart(val('in-docnum')) || 'SansNumero',
+        sanitizeFilePart(val('in-titre-doc')) || 'SansTitre',
+        formatDateJJMMAA(new Date())
+      ];
+      return parts.join(' ') + '.xlsx';
+    }
+
+    function syncRichToHidden() {
+      const rich = document.getElementById('in-biblio-rich');
+      const hidden = document.getElementById('in-biblio');
+      if (rich && hidden) hidden.value = rich.innerHTML.trim();
+    }
+
+    function setRichHtml(id, htmlValue) {
+      const rich = document.getElementById(id + '-rich');
+      const hidden = document.getElementById(id);
+      if (rich) rich.innerHTML = htmlValue || '';
+      if (hidden) hidden.value = htmlValue || '';
+    }
+
+    function execRichCommand(cmd, targetId) {
+      const target = document.getElementById(targetId);
+      if (!target) return;
+      target.focus();
+      document.execCommand(cmd, false, null);
+      syncRichToHidden();
+      syncRichToHidden();
+      syncPrint();
+      updateSectionCompletion();
+    }
+
+    function getFormData() {
+      syncRichToHidden();
+      const data = {};
+      FIELD_IDS.forEach(id => {
+        data[id] = document.getElementById(id)?.value ?? '';
+      });
+
+      CHECKBOX_GROUPS.forEach(group => {
+        data[group.key] = Array.from(document.querySelectorAll(group.selector + ':checked')).map(el => el.value);
+      });
+
+      data.genre = getGenreValue();
+      data.supportMateriel = document.querySelector('input[name="mat"]:checked')?.value || '';
+      data.exportFileName = buildDefaultFileName();
+      data.savedAt = new Date().toLocaleString('fr-FR');
+      return data;
+    }
+
+    function setCheckboxValues(selector, values) {
+      const set = new Set(Array.isArray(values) ? values : []);
+      document.querySelectorAll(selector).forEach(el => {
+        el.checked = set.has(el.value);
+      });
+    }
+
+    function loadFormData(data) {
+      if (!data || typeof data !== 'object') {
+        alert('Le fichier importé ne contient pas de données exploitables.');
+        return;
+      }
+
+      FIELD_IDS.forEach(id => {
+        const node = document.getElementById(id);
+        if (node && Object.prototype.hasOwnProperty.call(data, id)) {
+          node.value = data[id] ?? '';
+        }
+      });
+
+      if (Object.prototype.hasOwnProperty.call(data, 'in-biblio')) {
+        setRichHtml('in-biblio', data['in-biblio'] || '');
+      }
+
+      setCheckboxValues('#group-type input', data.types);
+      setCheckboxValues('.nat', data.natures);
+      setCheckboxValues('.ctx', data.contextes);
+      setCheckboxValues('.intention', data.intentions);
+
+      document.querySelectorAll('input[name="mat"]').forEach(el => {
+        el.checked = el.value === (data.supportMateriel || '');
+      });
+      setGenreValue(data.genre || '');
+
+      syncPrint();
+      updateSectionCompletion();
+    }
+
+    function saveToExcel() {
+      if (typeof XLSX === 'undefined') {
+        alert("La bibliothèque Excel n'est pas disponible. Vérifiez votre connexion Internet puis rechargez la page.");
+        return;
+      }
+
+      const data = getFormData();
+      const wsData = [
+        ['champ', 'valeur'],
+        ...Object.entries(data).map(([key, value]) => [key, Array.isArray(value) ? JSON.stringify(value) : String(value ?? '')])
+      ];
+      const worksheet = XLSX.utils.aoa_to_sheet(wsData);
+      worksheet['!cols'] = [{ wch: 26 }, { wch: 140 }];
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'fiche');
+      XLSX.writeFile(workbook, data.exportFileName);
+    }
+
+    async function importFromExcel(file) {
+      if (!file) return;
+      if (typeof XLSX === 'undefined') {
+        alert("La bibliothèque Excel n'est pas disponible. Vérifiez votre connexion Internet puis rechargez la page.");
+        return;
+      }
+
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: 'array' });
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
+      const data = {};
+      for (let i = 1; i < rows.length; i++) {
+        const key = rows[i][0];
+        const raw = rows[i][1];
+        if (!key) continue;
+        if (['types', 'natures', 'contextes', 'intentions'].includes(key)) {
+          try {
+            data[key] = raw ? JSON.parse(raw) : [];
+          } catch {
+            data[key] = [];
+          }
+        } else {
+          data[key] = raw;
+        }
+      }
+      loadFormData(data);
+    }
+
+    function resetForm() {
+      const ok = window.confirm('Réinitialiser toute la fiche ? Les données non sauvegardées seront perdues.');
+      if (!ok) return;
+      document.getElementById('analyse-form').reset();
+      setRichHtml('in-biblio', '');
+      document.querySelectorAll('#group-type input, .nat, .ctx, .intention').forEach(el => {
+        el.checked = false;
+      });
+      document.querySelectorAll('input[name="mat"]').forEach(el => {
+        el.checked = false;
+      });
+      setGenreValue('');
+      syncPrint();
+      updateSectionCompletion();
+    }
+
+    function exportPdf() {
+      syncPrint();
+      alert("Pour un rendu propre :\n\nDans la fenêtre d'impression,\n→ décochez 'En-têtes et pieds de page'.");
+      window.print();
+    }
+
+    function remplirExemple() {
+      document.getElementById('in-nom').value = 'Dupont';
+      document.getElementById('in-prenom').value = 'Camille';
+      document.getElementById('in-classe').value = '1ère';
+      document.getElementById('in-docnum').value = '2';
+      document.getElementById('in-besoin').value = 'En quoi le sport est bénéfique pour une personne en situation de handicap ?';
+      document.querySelectorAll('#group-type input, .nat, .ctx, .intention').forEach(el => { el.checked = false; });
+      document.querySelectorAll('input[name="mat"]').forEach(el => { el.checked = false; });
+      document.querySelector('#group-type input[value="Encyclopédie"]').checked = true;
+      document.querySelector('input[name="mat"][value="Numérique"]').checked = true;
+      document.querySelector('.nat[value="Texte"]').checked = true;
+      document.getElementById('in-type-autre').value = '';
+      document.getElementById('in-icono-precision').value = '';
+      setGenreValue('S');
+      document.querySelector('.ctx[value="Scientifique et technique"]').checked = true;
+      document.querySelector('.intention[value="Informer ou diffuser le savoir"]').checked = true;
+      document.getElementById('in-origine').value = 'France';
+      document.getElementById('in-titre-doc').value = 'Handisport';
+      document.getElementById('in-auteur').value = 'Pierre Lagrue';
+      document.getElementById('in-editeur').value = 'Encyclopædia Universalis';
+      document.getElementById('in-date-doc').value = '06/09/2011';
+      setRichHtml('in-biblio', '<strong>LAGRUE Pierre</strong> (2011). « <u>HANDISPORT</u> ». In <em>Encyclopædia Universalis</em> [en ligne], 06/09/2011. Disponible sur : www.universalis-edu.com/encyclopedie/handisport/ [consulté le 20 avril 2026]');
+      document.getElementById('in-validite-auteur').value = `Pierre Lagrue est historien du sport, écrivain et conférencier. Il a rédigé plus de 1 200 articles consacrés au sport et aux sportifs pour l’Encyclopædia Universalis.
+www.babelio.com/auteur/Pierre-Lagrue/246177`;
+      document.getElementById('in-validite-editeur').value = `Encyclopædia Universalis développe et maintient une politique éditoriale très exigeante, ce qui lui confère le statut d’encyclopédie de référence. Depuis sa création, 8 000 auteurs spécialistes de renommée internationale, parmi lesquels de très nombreux universitaires tous choisis pour leur expertise, sont venus enrichir et garantir la qualité du fonds éditorial de l’entreprise.
+www.encyclopaedia-universalis.fr/nous-connaitre/qui-sommes-nous/`;
+      document.getElementById('in-pertinence').value = `Afin de répondre à mon besoin d’information concernant les bénéfices du sport pour les personnes en situation de handicap j’ai sélectionné les informations suivantes dans le document 2.
+
+Le sport apporte des bienfaits psychologiques et personnels, il est présenté comme un outil puissant pour la reconstruction de l'individu : "reconquête de l'image de soi", dépassement de soi, retrouver une autonomie, le fauteuil roulant ne symbolise plus le "malheur" mais devient un "instrument de la performance".
+
+Il apporte des bienfaits physiques et thérapeutiques, initialement prévu comme un complément à la thérapie médicale, le sport agit sur plusieurs aspects physiologiques : renforcement général du corps, coordination et équilibre (Le tir à l'arc améliore la coordination et la maîtrise de la posture, l'escrime favorise le sens de l'équilibre du tronc), proprioception (perception de son propre corps dans l'espace pour un déficient visuel), hygiène de vie.
+
+Il apporte des bienfaits sociaux et aide à une meilleure intégration : soutien à la réinsertion, vie en collectivité, changer le regard des autres, esprit d’équipe, coopération.
+
+Le sport permet de prendre du plaisir et de s’évader (activités en pleine nature : ski, randonnée)`;
+      syncPrint();
+      updateSectionCompletion();
+    }
+
+    document.querySelectorAll('.rich-toolbar button').forEach(btn => {
+      btn.addEventListener('click', () => execRichCommand(btn.dataset.cmd, btn.dataset.target));
+    });
+    document.getElementById('in-biblio-rich').addEventListener('input', () => {
+      syncRichToHidden();
+      syncPrint();
+      updateSectionCompletion();
+    });
+    document.querySelectorAll('input[name="genre"]').forEach(el => {
+      el.addEventListener('change', () => {
+          syncPrint();
+        updateSectionCompletion();
+      });
+    });
+    document.getElementById('btn-export').addEventListener('click', exportPdf);
+    document.getElementById('btn-remplir-exemple').addEventListener('click', remplirExemple);
+    document.getElementById('btn-save-excel').addEventListener('click', saveToExcel);
+    document.getElementById('btn-import-excel').addEventListener('click', () => document.getElementById('file-import-excel').click());
+    document.getElementById('btn-reset').addEventListener('click', resetForm);
+    document.getElementById('file-import-excel').addEventListener('change', async (event) => {
+      const file = event.target.files?.[0];
+      try {
+        await importFromExcel(file);
+      } catch (error) {
+        console.error(error);
+        alert("Impossible d'importer ce fichier Excel.");
+      } finally {
+        event.target.value = '';
+      }
+    });
+    window.addEventListener('beforeprint', syncPrint);
+    document.getElementById('analyse-form').addEventListener('input', () => { syncPrint(); updateSectionCompletion(); });
+    document.getElementById('analyse-form').addEventListener('change', () => { syncPrint(); updateSectionCompletion(); });
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('demo') === '1') {
+      remplirExemple();
+      syncRichToHidden();
+    } else {
+      syncPrint();
+      updateSectionCompletion();
+    }
+  </script>
+</body>
+</html>
