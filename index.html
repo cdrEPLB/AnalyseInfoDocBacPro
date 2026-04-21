@@ -105,6 +105,17 @@
       gap: 18px;
     }
 
+	.subcard-title {
+	  margin: 0 0 8px;
+	  font-size: 1rem;
+	  font-weight: 600;
+	  color: #0f172a;
+	  padding: 6px 8px;
+	  border-left: 4px solid #475569;
+	  background: #e2e8f0;
+	  border-radius: 4px;
+	}
+
     .section {
       border: 1px solid #d9e0e6;
       border-radius: 12px;
@@ -312,6 +323,12 @@
         break-inside: avoid;
       }
 
+      .print-section {
+        break-inside: avoid-page;
+        page-break-inside: avoid;
+        margin: 0;
+      }
+
       .print-header {
         text-align: center;
         border: 1.6px solid #000;
@@ -356,15 +373,30 @@
         padding: 5px 7px;
         margin-top: 8px;
         margin-bottom: 0;
+        break-after: avoid-page;
+        page-break-after: avoid;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
+
+		.subcard-title {
+		  background: #d9d9d9 !important;
+		  border-left: 4px solid #000;
+		  font-size: 10.5pt;
+		  font-weight: 800;
+		  padding: 4px 6px;
+		  margin-bottom: 4px;
+		  -webkit-print-color-adjust: exact;
+		  print-color-adjust: exact;
+		}
 
       .section-box {
         border: 1.4px solid #000;
         border-top: 0;
         padding: 7px 8px;
         min-height: 28px;
+        break-before: avoid-page;
+        page-break-before: avoid;
       }
 
       .line-block {
@@ -379,6 +411,14 @@
 
       .choice-line {
         margin: 3px 0;
+      }
+
+      .choice-item {
+        white-space: nowrap;
+      }
+
+      .choice-sep {
+        white-space: nowrap;
       }
 
       .checkbox-char {
@@ -511,7 +551,6 @@
 
         <section class="section" data-complete-group="nature-genre">
           <h2>Nature et genre de l'information</h2>
-          <div class="grid-2">
             <div class="subcard">
               <div class="field-label">Nature de l'information</div>
               <div class="check-grid compact" style="margin-top: 8px;">
@@ -519,15 +558,15 @@
                 <label class="check-item"><input type="checkbox" class="nat" value="Audio">Audio</label>
                 <label class="check-item"><input type="checkbox" class="nat" value="Vidéo">Vidéo</label>
                 <label class="check-item"><input type="checkbox" class="nat" value="Iconographique">Iconographique</label>
+
               </div>
+			  <label class="field" style="margin-top: 12px;">
+					<span>Précision pour le support iconographique (facultatif)
+					<input type="text" id="in-icono-precision" placeholder="photo, dessin, carte, schéma, graphique..."></span>
+				</label>
             </div>
-            <div class="subcard">
-              <label class="field">
-                <span class="field-label">Précision pour le support iconographique (facultatif)</span>
-                <input type="text" id="in-icono-precision" placeholder="photo, dessin, carte, schéma, graphique...">
-              </label>
-            </div>
-          </div>
+
+      
 
 			<div class="subcard" style="margin-top: 14px;">
 			  <div class="field-label">Genre de l'information</div>
@@ -592,7 +631,7 @@
           <h2>Afin de compléter l'analyse</h2>
           <div class="grid-2">
             <div class="subcard">
-              <h3 style="margin-top:0; font-size:1rem;">Identification du document</h3>
+              <h3 class="subcard-title">Identification du document</h3>
               <div class="grid-2">
                 <label class="field"><span class="field-label">Titre du document</span><input type="text" id="in-titre-doc"></label>
                 <label class="field"><span class="field-label">Émetteur(s) / auteur(s)</span><input type="text" id="in-auteur"></label>
@@ -601,7 +640,7 @@
               </div>
             </div>
             <div class="subcard">
-              <h3 style="margin-top:0; font-size:1rem;">Référence bibliographique</h3>
+              <h3 class="subcard-title">Référence bibliographique</h3>
               <div class="help-box">Outil : <a href="https://lycee-agricole-bourbonnais.fr/biblio" target="_blank" rel="noopener noreferrer"><strong>lycee-agricole-bourbonnais.fr/biblio</strong></a></div>
               <div class="field" style="margin-top: 10px;">
                 <span class="field-label">Identification normée du document</span>
@@ -619,16 +658,19 @@
             </div>
           </div>
 
-          <div class="grid-2" style="margin-top: 14px;">
-            <label class="field">
-              <span class="field-label">Validité de la source : compétence de l'auteur / des auteurs</span>
-              <textarea id="in-validite-auteur" rows="5" placeholder="Expliquez pourquoi l'auteur est compétent."></textarea>
-            </label>
-            <label class="field">
-              <span class="field-label">Validité de la source : que dire de l'éditeur ?</span>
-              <textarea id="in-validite-editeur" rows="5" placeholder="Précisez en quoi l'éditeur est fiable ou reconnu."></textarea>
-            </label>
-          </div>
+		<div class="grid-2" style="margin-top: 14px;">
+
+		  <div class="subcard">
+			<h3 class="subcard-title">Validité de la source : compétence de l'auteur / des auteurs</h3>
+			<textarea id="in-validite-auteur" rows="5"></textarea>
+		  </div>
+
+		  <div class="subcard">
+			<h3 class="subcard-title">Validité de la source : que dire de l'éditeur ?</h3>
+			<textarea id="in-validite-editeur" rows="5"></textarea>
+		  </div>
+
+		</div>
         </section>
 
         <section class="section" data-complete-group="pertinence">
@@ -643,7 +685,7 @@
     <div class="hidden-print-doc" id="print-doc">
       <div class="print-page">
         <div class="print-header">
-          <div class="line-1">Lycée Agricole du Bourbonnais - Baccalauréat Professionnel 2025-2026</div>
+          <div class="line-1">Lycée Agricole du Bourbonnais - Baccalauréat Professionnel</div>
           <div class="line-2">Analyse du document</div>
         </div>
 
@@ -654,38 +696,47 @@
           <div class="id-cell"><strong>N°</strong> <span id="out-docnum"></span></div>
         </div>
 
-        <div class="section-title">Rappel du besoin d'information</div>
-        <div class="section-box free-text" id="out-besoin"></div>
-
-        <div class="section-title">Support du document : Quoi ?</div>
-        <div class="section-box">
-          <div class="line-block"><strong>Type de document ?</strong> <span id="out-type-line"></span></div>
-          <div class="line-block"><strong>Support matériel de l'information ?</strong> <span id="out-mat-line"></span></div>
+        <div class="print-section">
+          <div class="section-title">Rappel du besoin d'information</div>
+          <div class="section-box free-text" id="out-besoin"></div>
         </div>
 
-        <div class="section-title">Nature et Genre de l'information et support matériel : Quoi ?</div>
+        <div class="print-section">
+          <div class="section-title">Support du document : Quoi ?</div>
+          <div class="section-box">
+          <div class="line-block"><strong>Type de document ?</strong> <span id="out-type-line"></span></div>
+          <div class="line-block"><strong>Support matériel de l'information ?</strong> <span id="out-mat-line"></span></div>
+          </div>
+        </div>
+
+        <div class="print-section">
+          <div class="section-title">Nature et Genre de l'information et support matériel : Quoi ?</div>
         <div class="section-box">
           <div class="line-block"><strong>Nature de l'information ?</strong> <span id="out-nature-line"></span></div>
           <div class="line-block" id="out-icono-line-wrap" style="display:none;"><strong>Précision iconographique :</strong> <span id="out-icono-precision"></span></div>
           <div class="line-block"><strong>Genre de l'information ?</strong></div>
           <table class="genre-grid">
             <tr>
-              <td id="td-S"><span class="title">L'information spécialisée</span>scientifique, technique<br><br>Utilité =<br>explicite + durable</td>
+              <td id="td-S"><span class="title">L'information spécialisée</span>(scientifique, technique)<br><br>Utilité =<br>explicite + durable</td>
               <td id="td-R"><span class="title">L'information de renseignement</span><br>Utilité =<br>explicite + éphémère</td>
               <td id="td-C"><span class="title">L'information culturelle</span><br>Utilité =<br>diffuse + durable</td>
               <td id="td-M"><span class="title">L'information médiatique</span><br>Utilité =<br>diffuse + éphémère</td>
             </tr>
           </table>
+          </div>
         </div>
 
-        <div class="section-title">Production du document : Comment ? Pourquoi ? Où ?</div>
+        <div class="print-section">
+          <div class="section-title">Production du document : Comment ? Pourquoi ? Où ?</div>
         <div class="section-box">
           <div class="line-block"><strong>Contexte de production / création du document ?</strong> <span id="out-contexte"></span></div>
           <div class="line-block"><strong>Intention de l'émetteur (auteur) ou de l'éditeur ?</strong> <span id="out-intention"></span></div>
           <div class="line-block"><strong>Origine géographique ?</strong> <span id="out-origine"></span></div>
+          </div>
         </div>
 
-        <div class="section-title">Afin de compléter l'analyse : Identification du document</div>
+        <div class="print-section">
+          <div class="section-title">Afin de compléter l'analyse : Identification du document</div>
         <div class="section-box">
           <div class="line-block free-text">Concernant l'identification de la source de l'information, parmi les éléments d'identité je peux voir que le document :</div>
           <div class="line-block">a pour titre <strong id="out-titre-doc"></strong></div>
@@ -693,9 +744,11 @@
           <div class="line-block">a pour éditeur(s) / diffuseur(s) <strong id="out-editeur"></strong></div>
           <div class="line-block">a pour date(s) de création / modification <strong id="out-date-doc"></strong></div>
           <div class="biblio-frame free-text"><strong>Identification normée du document : référence bibliographique</strong><br><div id="out-biblio"></div></div>
+          </div>
         </div>
 
-        <div class="section-title">Validité de la source de l'information</div>
+        <div class="print-section">
+          <div class="section-title">Validité de la source de l'information</div>
         <div class="section-box two-col-print">
           <div>
             <strong>Je peux dire que l'auteur / les auteurs du document est / sont compétent(s) car :</strong>
@@ -705,11 +758,13 @@
             <strong>Que puis-je dire de l'éditeur ? (important si l'auteur n'est pas identifiable)</strong>
             <div class="free-text" id="out-validite-editeur"></div>
           </div>
+          </div>
         </div>
 
-        <div class="section-title">Que retiens-tu de pertinent pour répondre au besoin d'information ?</div>
-        <div class="section-box free-text big-area" id="out-pertinence"></div>
-
+        <div class="print-section">
+          <div class="section-title">Que retiens-tu de pertinent pour répondre au besoin d'information ?</div>
+          <div class="section-box free-text big-area" id="out-pertinence"></div>
+        </div>
 
       </div>
     </div>
@@ -730,15 +785,29 @@
     }
 
     function makeOptionsLine(options, selectedValues, extraLabel, extraValue) {
-      const parts = options.map(option => `${box(selectedValues.includes(option))} ${option}`);
+      const parts = options.map(option => `<span class="choice-item">${box(selectedValues.includes(option))}&nbsp;${escapeHtml(option)}</span>`);
       if (extraLabel) {
-        parts.push(`${box(Boolean(extraValue))} ${extraLabel}${extraValue ? ' = ' + extraValue : ' = _________________'}`);
+        const extraText = `${extraLabel}${extraValue ? ' = ' + extraValue : ' = _________________'}`;
+        parts.push(`<span class="choice-item">${box(Boolean(extraValue))}&nbsp;${escapeHtml(extraText)}</span>`);
       }
-      return parts.join(' / ');
+      return parts.join(' <span class="choice-sep">/</span> ');
     }
 
     function setText(id, value) {
       document.getElementById(id).textContent = value || '';
+    }
+
+    function setHtml(id, value) {
+      document.getElementById(id).innerHTML = value || '';
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
     }
 
     function htmlToPlainText(html) {
@@ -802,14 +871,14 @@
 
       const selectedTypes = checkedValues('#group-type input');
       const typeLine = makeOptionsLine(typesList, selectedTypes, 'Autre', val('in-type-autre'));
-      setText('out-type-line', typeLine);
+      setHtml('out-type-line', typeLine);
 
       const selectedMat = document.querySelector('input[name="mat"]:checked')?.value || '';
-      setText('out-mat-line', `${box(selectedMat === 'Papier')} Papier / ${box(selectedMat === 'Numérique')} Numérique`);
+      setHtml('out-mat-line', `<span class="choice-item">${box(selectedMat === 'Papier')}&nbsp;Papier</span> <span class="choice-sep">/</span> <span class="choice-item">${box(selectedMat === 'Numérique')}&nbsp;Numérique</span>`);
 
       const selectedNatures = checkedValues('.nat');
       const natureLine = makeOptionsLine(naturesList, selectedNatures, '', '');
-      setText('out-nature-line', natureLine);
+      setHtml('out-nature-line', natureLine);
 
       const iconoWrap = document.getElementById('out-icono-line-wrap');
       const iconoPrecision = val('in-icono-precision');
@@ -817,8 +886,8 @@
       iconoWrap.style.display = hasIcono ? 'block' : 'none';
       setText('out-icono-precision', iconoPrecision);
 
-      setText('out-contexte', makeOptionsLine(ctxList, checkedValues('.ctx'), '', ''));
-      setText('out-intention', makeOptionsLine(intentionList, checkedValues('.intention'), '', ''));
+      setHtml('out-contexte', makeOptionsLine(ctxList, checkedValues('.ctx'), '', ''));
+      setHtml('out-intention', makeOptionsLine(intentionList, checkedValues('.intention'), '', ''));
 
       const genre = document.querySelector('input[name="genre"]:checked')?.value || '';
       ['S', 'R', 'C', 'M'].forEach(code => {
@@ -1077,7 +1146,7 @@
       document.getElementById('in-auteur').value = 'Pierre Lagrue';
       document.getElementById('in-editeur').value = 'Encyclopædia Universalis';
       document.getElementById('in-date-doc').value = '06/09/2011';
-      setRichHtml('in-biblio', '<strong>LAGRUE Pierre</strong> (2011). « <u>HANDISPORT</u> ». In <em>Encyclopædia Universalis</em> [en ligne], 06/09/2011. Disponible sur : www.universalis-edu.com/encyclopedie/handisport/ [consulté le 20 avril 2026]');
+      setRichHtml('in-biblio', 'LAGRUE Pierre (2011). « HANDISPORT ». In <strong><em>Encyclopædia Universalis</em></strong> [en ligne], 06/09/2011. Disponible sur : www.universalis-edu.com/encyclopedie/handisport/ [consulté le 20 avril 2026]');
       document.getElementById('in-validite-auteur').value = `Pierre Lagrue est historien du sport, écrivain et conférencier. Il a rédigé plus de 1 200 articles consacrés au sport et aux sportifs pour l’Encyclopædia Universalis.
 www.babelio.com/auteur/Pierre-Lagrue/246177`;
       document.getElementById('in-validite-editeur').value = `Encyclopædia Universalis développe et maintient une politique éditoriale très exigeante, ce qui lui confère le statut d’encyclopédie de référence. Depuis sa création, 8 000 auteurs spécialistes de renommée internationale, parmi lesquels de très nombreux universitaires tous choisis pour leur expertise, sont venus enrichir et garantir la qualité du fonds éditorial de l’entreprise.
@@ -1090,7 +1159,7 @@ Il apporte des bienfaits physiques et thérapeutiques, initialement prévu comme
 
 Il apporte des bienfaits sociaux et aide à une meilleure intégration : soutien à la réinsertion, vie en collectivité, changer le regard des autres, esprit d’équipe, coopération.
 
-Le sport permet de prendre du plaisir et de s’évader (activités en pleine nature : ski, randonnée)`;
+Le sport permet de prendre du plaisir et de s’évader (activités en pleine nature : ski, randonnée).`;
       syncPrint();
       updateSectionCompletion();
     }
